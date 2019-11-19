@@ -375,7 +375,7 @@ class Subscription extends Model
     /**
      * Determine if the subscription is fastspring.
      *
-     * @return bool
+     * @return string
      */
     public function isFastspring()
     {
@@ -434,13 +434,14 @@ class Subscription extends Model
             return $this;
         }
 
-        // else
-        // TODO: it might be better to create custom exception
+        // @todo It would be better to create a custom \Exception class.
         throw new Exception('Swap operation failed. Response: '.json_encode($response));
     }
 
     /**
      * Cancel the subscription at the end of the billing period.
+     *
+     * @throws \Exception
      *
      * @return object Response of fastspring
      */
@@ -459,14 +460,15 @@ class Subscription extends Model
 
             return $this;
         }
-
-        // else
-        // TODO: it might be better to create custom exception
+        
+        // @todo It would be better to create a custom \Exception class.
         throw new Exception('Cancel operation failed. Response: '.json_encode($response));
     }
 
     /**
      * Cancel the subscription immediately.
+     *
+     * @throws \Exception
      *
      * @return object Response of fastspring
      */
@@ -484,8 +486,7 @@ class Subscription extends Model
             return $this;
         }
 
-        // else
-        // TODO: it might be better to create custom exception
+        // @todo It would be better to create a custom \Exception class.
         throw new Exception('CancelNow operation failed. Response: '.json_encode($response));
     }
 
@@ -517,9 +518,8 @@ class Subscription extends Model
 
             return $this;
         }
-
-        // else
-        // TODO: it might be better to create custom exception
-        throw new Exception('Resume operation failed. Response: '.json_encode($response));
+      
+        // @todo It would be better to create a custom \Exception class.
+        qthrow new Exception('Resume operation failed. Response: '.json_encode($response));
     }
 }
