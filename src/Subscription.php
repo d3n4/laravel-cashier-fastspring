@@ -460,7 +460,7 @@ class Subscription extends Model
 
             return $this;
         }
-        
+
         // @todo It would be better to create a custom \Exception class.
         throw new Exception('Cancel operation failed. Response: '.json_encode($response));
     }
@@ -518,7 +518,7 @@ class Subscription extends Model
 
             return $this;
         }
-      
+
         // @todo It would be better to create a custom \Exception class.
         throw new Exception('Resume operation failed. Response: '.json_encode($response));
     }
