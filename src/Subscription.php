@@ -520,6 +520,6 @@ class Subscription extends Model
         }
       
         // @todo It would be better to create a custom \Exception class.
-        qthrow new Exception('Resume operation failed. Response: '.json_encode($response));
+        throw new Exception('Resume operation failed. Response: '.json_encode($response));
     }
 }
