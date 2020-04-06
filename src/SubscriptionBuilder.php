@@ -55,11 +55,18 @@ class SubscriptionBuilder
     protected $coupon;
 
     /**
+     * Payload override
+     *
+     * @var array
+     */
+    protected $payload_override = [];
+
+    /**
      * Create a new subscription builder instance.
      *
-     * @param mixed  $owner Owner details
-     * @param string $name  Plan name
-     * @param string $plan  Plan
+     * @param  mixed  $owner  Owner details
+     * @param  string  $name  Plan name
+     * @param  string  $plan  Plan
      *
      * @return void
      */
@@ -73,7 +80,7 @@ class SubscriptionBuilder
     /**
      * Specify the quantity of the subscription.
      *
-     * @param int $quantity Number of items
+     * @param  int  $quantity  Number of items
      *
      * @return $this
      */
@@ -87,7 +94,7 @@ class SubscriptionBuilder
     /**
      * The coupon to apply to a new subscription.
      *
-     * @param string $coupon Coupon string to use
+     * @param  string  $coupon  Coupon string to use
      *
      * @return $this
      */
@@ -111,6 +118,18 @@ class SubscriptionBuilder
     }
 
     /**
+     * Payload override
+     *
+     * @param $payload
+     * @return $this
+     */
+    public function payload(array $payload)
+    {
+        $this->payload_override = $payload;
+        return $this;
+    }
+
+    /**
      * Get the fastspring id for the current user.
      *
      * If an email key exists in error node then we assume this error is related
@@ -118,9 +137,9 @@ class SubscriptionBuilder
      * fastspring-side error message. It will also returns account link but
      * messages are easily changable so we can't rely on that.
      *
+     * @return int|string
      * @throws Exception
      *
-     * @return int|string
      */
     protected function getFastspringIdOfCustomer()
     {
@@ -154,17 +173,17 @@ class SubscriptionBuilder
     /**
      * Build the payload for session creation.
      *
-     * @param int $fastspringId The fastspring identifier
+     * @param  int  $fastspringId  The fastspring identifier
      *
      * @return array
      */
     protected function buildPayload($fastspringId)
     {
-        return array_filter([
+        $payload = [
             'account' => $fastspringId,
-            'items'   => [
+            'items' => [
                 [
-                    'product'  => $this->plan,
+                    'product' => $this->plan,
                     'quantity' => $this->quantity,
                 ],
             ],
@@ -172,6 +191,7 @@ class SubscriptionBuilder
                 'name' => $this->name,
             ],
             'coupon' => $this->coupon,
-        ]);
+        ];
+        return array_filter(array_replace_recursive($payload, $this->payload_override));
     }
 }
