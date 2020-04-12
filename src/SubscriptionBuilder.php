@@ -146,7 +146,7 @@ class SubscriptionBuilder
      */
     public function payload(array $payload)
     {
-        $this->payload_override = $payload;
+        $this->payload_override[] = $payload;
         return $this;
     }
 
@@ -200,7 +200,7 @@ class SubscriptionBuilder
      */
     protected function buildPayload($fastspringId)
     {
-        $payload = [
+        $payload_override = [
             'account' => $fastspringId,
             'items' => [
                 [
@@ -215,9 +215,13 @@ class SubscriptionBuilder
         ];
 
         if ($this->contact && is_array($this->contact)) {
-            $payload['contact'] = $this->contact;
+            $payload_override['contact'] = $this->contact;
         }
 
-        return array_filter(array_replace_recursive($payload, $this->payload_override));
+        foreach ($this->payload_override as $payload_override) {
+            $payload = array_filter(array_replace_recursive($payload, $payload_override));
+        }
+
+        return $data;
     }
 }
