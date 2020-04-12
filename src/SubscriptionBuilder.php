@@ -55,6 +55,13 @@ class SubscriptionBuilder
     protected $coupon;
 
     /**
+     * Predefined customer contact information.
+     *
+     * @var array|null
+     */
+    protected $contact;
+
+    /**
      * Payload override
      *
      * @var array
@@ -101,6 +108,20 @@ class SubscriptionBuilder
     public function withCoupon($coupon)
     {
         $this->coupon = $coupon;
+
+        return $this;
+    }
+
+    /**
+     * Predefined customer contact information being applied to a new subscription.
+     *
+     * @param  array  $contact  Contact information (email, firstName, lastName, company, phone)
+     *
+     * @return $this
+     */
+    public function withContact($contact)
+    {
+        $this->contact = $contact;
 
         return $this;
     }
@@ -192,6 +213,11 @@ class SubscriptionBuilder
             ],
             'coupon' => $this->coupon,
         ];
+
+        if ($this->contact && is_array($this->contact)) {
+            $payload['contact'] = $this->contact;
+        }
+
         return array_filter(array_replace_recursive($payload, $this->payload_override));
     }
 }
