@@ -14,6 +14,7 @@ namespace TwentyTwoDigital\CashierFastspring;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use LogicException;
 use TwentyTwoDigital\CashierFastspring\Fastspring\Fastspring;
 
@@ -79,7 +80,7 @@ class Subscription extends Model
      *
      * Note: This is not eloquent relation, it returns SubscriptionPeriod model directly.
      *
-     * @return \TwentyTwoDigital\CashierFastspring\SubscriptionPeriod
+     * @return SubscriptionPeriod
      */
     public function activePeriodOrCreate()
     {
@@ -93,7 +94,7 @@ class Subscription extends Model
     /**
      * Get active fastspring period or retrieve the active period from fastspring and create.
      *
-     * @return \TwentyTwoDigital\CashierFastspring\SubscriptionPeriod
+     * @return SubscriptionPeriod
      */
     public function activeFastspringPeriodOrCreate()
     {
@@ -119,7 +120,7 @@ class Subscription extends Model
     /**
      * Get active local period or create.
      *
-     * @return \TwentyTwoDigital\CashierFastspring\SubscriptionPeriod
+     * @return SubscriptionPeriod
      */
     public function activeLocalPeriodOrCreate()
     {
@@ -145,7 +146,7 @@ class Subscription extends Model
     /**
      * Create period with the information from fastspring.
      *
-     * @return \TwentyTwoDigital\CashierFastspring\SubscriptionPeriod
+     * @return SubscriptionPeriod
      */
     protected function createPeriodFromFastspring()
     {
@@ -174,9 +175,9 @@ class Subscription extends Model
      * Simply finds latest and add its dates $interval_length * $interval_unit
      * If there is no subscription period, it creates a subscription period started today
      *
-     * @throws \Exception
+     * @return SubscriptionPeriod
+     *@throws Exception
      *
-     * @return \TwentyTwoDigital\CashierFastspring\SubscriptionPeriod
      */
     protected function createPeriodLocally()
     {
@@ -219,7 +220,7 @@ class Subscription extends Model
                     break;
 
                 default:
-                    throw new Exception('Unexcepted interval unit: ' . $subscription->interval_unit);
+                    throw new Exception('Unexcepted interval unit: ' . $this->interval_unit);
             }
 
             $subscriptionPeriodData = [
@@ -240,7 +241,7 @@ class Subscription extends Model
     /**
      * Get the model related to the subscription.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
     public function owner()
     {
@@ -390,9 +391,9 @@ class Subscription extends Model
      * @param int    $quantity Quantity of the product
      * @param array  $coupons  Coupons wanted to be applied
      *
-     * @throws \Exception
-     *
      * @return object Response of fastspring
+     *@throws Exception
+     *
      */
     public function swap($plan, $prorate, $quantity = 1, $coupons = [])
     {
@@ -440,9 +441,9 @@ class Subscription extends Model
     /**
      * Cancel the subscription at the end of the billing period.
      *
-     * @throws \Exception
-     *
      * @return object Response of fastspring
+     *@throws Exception
+     *
      */
     public function cancel()
     {
@@ -466,9 +467,9 @@ class Subscription extends Model
     /**
      * Cancel the subscription immediately.
      *
-     * @throws \Exception
-     *
      * @return object Response of fastspring
+     *@throws Exception
+     *
      */
     public function cancelNow()
     {
@@ -490,10 +491,10 @@ class Subscription extends Model
     /**
      * Resume the cancelled subscription.
      *
-     * @throws \LogicException
-     * @throws \Exception
-     *
      * @return object Response of fastspring
+     * @throws Exception
+     *
+     * @throws \LogicException
      */
     public function resume()
     {

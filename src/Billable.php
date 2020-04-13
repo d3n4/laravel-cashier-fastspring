@@ -12,6 +12,7 @@
 namespace TwentyTwoDigital\CashierFastspring;
 
 use Exception;
+use Illuminate\Database\Eloquent\Collection;
 use TwentyTwoDigital\CashierFastspring\Exceptions\NotImplementedException;
 use TwentyTwoDigital\CashierFastspring\Fastspring\Fastspring;
 
@@ -25,10 +26,10 @@ trait Billable
     /**
      * Make a "one off" charge on the customer for the given amount.
      *
-     * @param int   $amount  The amount to charge
-     * @param array $options Array of options
+     * @param  int  $amount  The amount to charge
+     * @param  array  $options  Array of options
      *
-     * @throws \TwentyTwoDigital\CashierFastspring\Exceptions\NotImplementedException
+     * @throws NotImplementedException
      */
     public function charge($amount, array $options = [])
     {
@@ -38,10 +39,10 @@ trait Billable
     /**
      * Refund a customer for a charge.
      *
-     * @param string $charge  The amount to refund
-     * @param array  $options Array of options
+     * @param  string  $charge  The amount to refund
+     * @param  array  $options  Array of options
      *
-     * @throws \TwentyTwoDigital\CashierFastspring\Exceptions\NotImplementedException
+     * @throws NotImplementedException
      */
     public function refund($charge, array $options = [])
     {
@@ -51,10 +52,10 @@ trait Billable
     /**
      * Begin creating a new subscription.
      *
-     * @param string $subscription Subscription name
-     * @param string $plan         The plan name
+     * @param  string  $subscription  Subscription name
+     * @param  string  $plan  The plan name
      *
-     * @return \TwentyTwoDigital\CashierFastspring\SubscriptionBuilder
+     * @return SubscriptionBuilder
      */
     public function newSubscription($subscription, $plan)
     {
@@ -64,34 +65,33 @@ trait Billable
     /**
      * Determine if the subscription is on trial.
      *
-     * @param string      $subscription Subscription name
-     * @param string|null $plan         Plan name
+     * @param  string  $subscription  Subscription name
+     * @param  string|null  $plan  Plan name
      *
      * @return bool
      */
-    public function onTrial($subscription = 'default', $plan = null)
+    public function onTrial($subscription = null, $plan = null)
     {
-        $subscription = $this->subscription($subscription);
+        $subscription = $this->_subscription($subscription);
 
         if (is_null($plan)) {
             return $subscription && $subscription->onTrial();
         }
 
-        return $subscription && $subscription->onTrial() &&
-               $subscription->plan === $plan;
+        return $subscription && $subscription->onTrial() && $subscription->plan === $plan;
     }
 
     /**
      * Determine if the model has a given subscription.
      *
-     * @param string      $subscription Subscription name
-     * @param string|null $plan         Plan name
+     * @param  string  $subscription  Subscription name
+     * @param  string|null  $plan  Plan name
      *
      * @return bool
      */
-    public function subscribed($subscription = 'default', $plan = null)
+    public function subscribed($subscription = null, $plan = null)
     {
-        $subscription = $this->subscription($subscription);
+        $subscription = $this->_subscription($subscription);
 
         if (is_null($subscription)) {
             return false;
@@ -101,31 +101,31 @@ trait Billable
             return $subscription->valid();
         }
 
-        return $subscription->valid() &&
-               $subscription->plan === $plan;
+        return $subscription->valid() && $subscription->plan === $plan;
     }
 
     /**
      * Get a subscription instance by name.
      *
-     * @param string $subscription
+     * @param  string  $subscription
      *
-     * @return \TwentyTwoDigital\CashierFastspring\Subscription|null
+     * @return Subscription|null
      */
-    public function subscription($subscription = 'default')
+    public function _subscription($subscription = null)
     {
-        return $this->subscriptions()
-            ->where('name', $subscription)
-            ->orderBy('created_at', 'desc')
-            ->first();
+        $builder = $this->_subscriptions();
+        if ($subscription) {
+            $builder->where('name', $subscription);
+        }
+        return $builder->orderBy('created_at', 'desc')->first();
     }
 
     /**
      * Get all of the subscriptions for the model.
      *
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return Collection
      */
-    public function subscriptions()
+    public function _subscriptions()
     {
         return $this->hasMany(Subscription::class, $this->getForeignKey())->orderBy('created_at', 'desc');
     }
@@ -143,14 +143,14 @@ trait Billable
     /**
      * Determine if the model is actively subscribed to one of the given plans.
      *
-     * @param string|null $plans        Plan name
-     * @param string      $subscription Subscription name
+     * @param  string|null  $plans  Plan name
+     * @param  string  $subscription  Subscription name
      *
      * @return bool
      */
-    public function subscribedToPlan($plans, $subscription = 'default')
+    public function subscribedToPlan($plans, $subscription = null)
     {
-        $subscription = $this->subscription($subscription);
+        $subscription = $this->_subscription($subscription);
 
         if (!$subscription || !$subscription->valid()) {
             return false;
@@ -168,7 +168,7 @@ trait Billable
     /**
      * Determine if the entity is on the given plan.
      *
-     * @param string $plan Plan name
+     * @param  string  $plan  Plan name
      *
      * @return bool
      */
@@ -192,7 +192,7 @@ trait Billable
     /**
      * Generate authenticated url of fastspring account management panel.
      *
-     * @return \TwentyTwoDigital\CashierFastspring\Fastspring\Fastspring
+     * @return Fastspring
      */
     public function accountManagementURI()
     {
@@ -204,22 +204,22 @@ trait Billable
     /**
      * Create a Fastspring customer for the given user model.
      *
-     * @param array $options Options array of customer information
+     * @param  array  $options  Options array of customer information
      *
-     * @return \TwentyTwoDigital\CashierFastspring\Fastspring\Fastspring
+     * @return Fastspring
      */
     public function createAsFastspringCustomer(array $options = [])
     {
         $options = empty($options) ? [
             'contact' => [
-                'first'   => $this->extractFirstName(),
-                'last'    => $this->extractLastName(),
-                'email'   => $this->email,
+                'first' => $this->extractFirstName(),
+                'last' => $this->extractLastName(),
+                'email' => $this->email,
                 'company' => $this->company,
-                'phone'   => $this->phone,
+                'phone' => $this->phone,
             ],
             'language' => $this->language,
-            'country'  => $this->country,
+            'country' => $this->country,
         ] : $options;
 
         // Here we will create the customer instance on Fastspring and store the ID of the
@@ -237,11 +237,11 @@ trait Billable
     /**
      * Update the related account on Fastspring, given user-model.
      *
-     * @param array $options array of customer information
-     *
-     * @throws Exception No valid Fastspring ID
+     * @param  array  $options  array of customer information
      *
      * @return object
+     * @throws Exception No valid Fastspring ID
+     *
      */
     public function updateAsFastspringCustomer(array $options = [])
     {
@@ -251,14 +251,14 @@ trait Billable
 
         $options = empty($options) ? [
             'contact' => [
-                'first'   => $this->extractFirstName(),
-                'last'    => $this->extractLastName(),
-                'email'   => $this->email,
+                'first' => $this->extractFirstName(),
+                'last' => $this->extractLastName(),
+                'email' => $this->email,
                 'company' => $this->company,
-                'phone'   => $this->phone,
+                'phone' => $this->phone,
             ],
             'language' => $this->language,
-            'country'  => $this->country,
+            'country' => $this->country,
         ] : $options;
 
         // update
@@ -270,9 +270,9 @@ trait Billable
     /**
      * Get the Fastspring customer for the model.
      *
+     * @return object
      * @throws Exception No valid Fastspring ID
      *
-     * @return object
      */
     public function asFastspringCustomer()
     {

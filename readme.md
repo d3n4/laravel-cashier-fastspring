@@ -277,7 +277,7 @@ You can change current plan of a `Billable` model by using `swap` method as belo
 ```php
 $user = App\User::find(1);
 
-$user->subscription('default')->swap('provider-plan-id', $prorate, $quantity, $coupons);
+$user->_subscription('default')->swap('provider-plan-id', $prorate, $quantity, $coupons);
 ```
 
 The `swap` method communicates with Fastspring and updates the subscription model according to response. If you plan to swap plan without prorating, plan doesn't change immediately. In that case, future plan and swap date are saved to `swap_to` and `swap_at` columns. End of the current subscription period, Fastspring sends you webhook request about subscription change. That's why if you think to use prorating, remember to set webhooks right.
