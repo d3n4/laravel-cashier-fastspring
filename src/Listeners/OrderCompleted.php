@@ -15,6 +15,7 @@
 namespace TwentyTwoDigital\CashierFastspring\Listeners;
 
 use TwentyTwoDigital\CashierFastspring\Events;
+use TwentyTwoDigital\CashierFastspring\Fastspring\ApiClient;
 use TwentyTwoDigital\CashierFastspring\Invoice;
 
 /**
@@ -40,7 +41,7 @@ class OrderCompleted extends Base
     /**
      * Handle the event.
      *
-     * @param \TwentyTwoDigital\CashierFastspring\Events\OrderCompleted $event
+     * @param  Events\OrderCompleted  $event
      *
      * @return void
      */
@@ -51,9 +52,14 @@ class OrderCompleted extends Base
         $data = $event->data;
         $subscription = $data['items'][0]['subscription'];
 
+        $subscription_id = is_string($subscription) ? $subscription : $subscription['id'];
+
+        $api = new ApiClient();
+        $subscription = (array)$api->getSubscriptions([$subscription_id]);
+
         $invoice = Invoice::firstOrNew([
             'fastspring_id' => $data['id'],
-            'type'          => 'subscription',
+            'type' => 'subscription',
         ]);
 
         $periodStartDate = $subscription['nextInSeconds'];

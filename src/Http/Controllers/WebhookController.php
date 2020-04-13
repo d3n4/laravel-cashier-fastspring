@@ -19,7 +19,6 @@ use Illuminate\Support\Str;
 use Log;
 use Symfony\Component\HttpFoundation\Response;
 use TwentyTwoDigital\CashierFastspring\Events;
-use TwentyTwoDigital\CashierFastspring\Fastspring\Fastspring;
 
 /**
  * Controls the data flow into a webhook object and updates the view
@@ -32,22 +31,22 @@ class WebhookController extends Controller
     /**
      * Handle a Fastspring webhook call.
      *
-     * @param \Illuminate\Http\Request $request The webhook requet
+     * @param  Request  $request  The webhook requet
      *
+     * @return Response
      * @throws Exception
      *
-     * @return \Symfony\Component\HttpFoundation\Response
      */
     public function handleWebhook(Request $request)
     {
+        $pl = $request->getContent();
+        file_put_contents(storage_path('/payloads/payload.'.time().'.json'), $pl);
         $payload = json_decode($request->getContent(), true);
 
         // keep id of successfully managed events
         $successfulEvents = [];
 
-        $hmacSecret = getenv('FASTSPRING_HMAC_SECRET') === false
-            ? config('services.fastspring.hmac_secret')
-            : getenv('FASTSPRING_HMAC_SECRET');
+        $hmacSecret = getenv('FASTSPRING_HMAC_SECRET') === false ? config('services.fastspring.hmac_secret') : getenv('FASTSPRING_HMAC_SECRET');
 
         // we try to be sure about
         // message integrity and authentication of message
@@ -71,11 +70,11 @@ class WebhookController extends Controller
             // prepare category event class names like OrderAny
             $explodedType = explode('.', $event['type']);
             $category = array_shift($explodedType);
-            $categoryEvent = '\TwentyTwoDigital\CashierFastspring\Events\\' . Str::studly($category) . 'Any';
+            $categoryEvent = '\TwentyTwoDigital\CashierFastspring\Events\\'.Str::studly($category).'Any';
 
             // prepare category event class names like activity
             $activity = str_replace('.', ' ', $event['type']);
-            $activityEvent = '\TwentyTwoDigital\CashierFastspring\Events\\' . Str::studly($activity);
+            $activityEvent = '\TwentyTwoDigital\CashierFastspring\Events\\'.Str::studly($activity);
 
             // there may be some exceptions on events
             // so if anything goes bad its ID won't be added on the successfullEvents
@@ -85,42 +84,15 @@ class WebhookController extends Controller
                 // check if the related event classes are exist
                 // there may be not handled events
                 if (!class_exists($categoryEvent) || !class_exists($activityEvent)) {
-                    throw new Exception('There is no event for ' . $event['type']);
+                    throw new Exception('There is no event for '.$event['type']);
                 }
 
                 // trigger events
-                Event::dispatch(
-                    new Events\Any(
-                        $event['id'],
-                        $event['type'],
-                        $event['live'],
-                        $event['processed'],
-                        $event['created'],
-                        $event['data']
-                    )
-                );
+                Event::dispatch(new Events\Any($event['id'], $event['type'], $event['live'], $event['processed'], $event['created'], $event['data']));
 
-                Event::dispatch(
-                    new $categoryEvent(
-                        $event['id'],
-                        $event['type'],
-                        $event['live'],
-                        $event['processed'],
-                        $event['created'],
-                        $event['data']
-                    )
-                );
+                Event::dispatch(new $categoryEvent($event['id'], $event['type'], $event['live'], $event['processed'], $event['created'], $event['data']));
 
-                Event::dispatch(
-                    new $activityEvent(
-                        $event['id'],
-                        $event['type'],
-                        $event['live'],
-                        $event['processed'],
-                        $event['created'],
-                        $event['data']
-                    )
-                );
+                Event::dispatch(new $activityEvent($event['id'], $event['type'], $event['live'], $event['processed'], $event['created'], $event['data']));
 
                 // add event id to successful events
                 $successfulEvents[] = $event['id'];
